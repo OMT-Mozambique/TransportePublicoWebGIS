@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Transport WebGIS</title>
+
+    <!-- Bootstrap for UI -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Leaflet.js for mapping -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- 🔹 Tesla-style Navigation Bar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand">🚌 Mapa dos Transportes de Moçambique</a>
+            <div class="nav-links">
+                <a href="#">Sobre</a>
+                <a href="#">Contacte-nos</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 🔹 Left Sidebar -->
+    <div class="sidebar">
+        <!-- 🔹 District Filter -->
+        <label for="district-filter"><b>🗺️ Selecione Área:</b></label>
+        <select id="district-filter">
+            <option value="">Todos os Distritos</option>
+        </select>
+    
+        <!-- 🔹 Chapas Routes (Collapsible & Checkable) -->
+        <div class="route-group">
+            <span class="arrow" onclick="toggleCollapse('routes-container')">▶</span>
+            <label>
+                <input type="checkbox" id="check-chapas"> 🚐 Chapas
+            </label>
+            <div class="content" id="routes-container" style="display: none;"></div>
+        </div>
+    
+        <!-- 🔹 REM Routes (Collapsible & Checkable) -->
+        <div class="route-group">
+            <span class="arrow" onclick="toggleCollapse('routes-rem-container')">▶</span>
+            <label>
+                <input type="checkbox" id="check-rem"> 🚌 REM
+            </label>
+            <div class="content" id="routes-rem-container" style="display: none;"></div>
+        </div>
+    
+        <!-- 🔹 CFM Routes (Collapsible & Checkable) -->
+        <div class="route-group">
+            <span class="arrow" onclick="toggleCollapse('routes-cfm-container')">▶</span>
+            <label>
+                <input type="checkbox" id="check-cfm"> 🚆 CFM
+            </label>
+            <div class="content" id="routes-cfm-container" style="display: none;"></div>
+        </div>
+    </div>
+    
+
+    <!-- 🔹 Right Sidebar for Statistics -->
+    <div id="stats-container">
+        <p><strong>Numero total de rotas:</strong> <span id="total-routes">0</span></p>
+        <p><strong>Numero de rotas selecionadas:</strong> <span id="selected-routes-count">0</span></p>
+        <p><strong>Nome da rota selecionada:</strong> <span id="selected-route">None</span></p>
+
+        <p><strong>Distancia (km) - Ida:</strong> <span id="inbound-distance">0</span></p>
+        <p><strong>Distancia (km) - Volta:</strong> <span id="outbound-distance">0</span></p>
+
+        <p><strong>Numero de Paragens - Ida:</strong> <span id="inbound-stops">0</span></p>
+        <p><strong>Numero de Paragens - Volta:</strong> <span id="outbound-stops">0</span></p>
+
+        <p><strong>Tempo de viagem (min) - Ida:</strong> <span id="inbound-travel-time">0</span></p>
+        <p><strong>Tempo de viagem (min) - Volta:</strong> <span id="outbound-travel-time">0</span></p>
+
+        <p><strong>Operador:</strong> <span id="route-operator">N/A</span></p>
+    </div>
+
+    <!-- 🔹 Fullscreen Map -->
+    <div id="map"></div>
+
+    <!-- Leaflet.js & Plugins -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.2/proj4.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+</html>
