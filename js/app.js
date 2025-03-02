@@ -26,10 +26,10 @@ document.addEventListener("DOMContentLoaded", function () {
         "🟠 Grayscale": grayscaleBasemap,
         "🌍 Satellite": satelliteBasemap
     };
-    L.control.layers(baseMaps).addTo(map); // Adds control to toggle basemaps
+    L.control.layers(baseMaps).addTo(map);
     L.control.scale({ position: "bottomright" }).addTo(map);
 
-    // 🔹 Add North Arrow at Bottom Right
+    // 🔹 Add North Arrow
     var northControl = L.control({ position: "bottomright" });
     northControl.onAdd = function () {
         var div = L.DomUtil.create("div", "north-arrow");
@@ -38,13 +38,13 @@ document.addEventListener("DOMContentLoaded", function () {
     };
     northControl.addTo(map);
 
-    // 🔹 Ensure Chapas Sidebar is Expanded on Load
-    document.getElementById("routes-container").style.display = "block"; // ✅ Ensure visible
-
     // 🔹 Layers for Routes and Stops
     var routesLayer = L.layerGroup().addTo(map);
     var stopsLayer = L.layerGroup().addTo(map);
-    var allStopsGeoJSON; // Stores all stops
+    var allStopsGeoJSON;
+
+    // 🔹 Ensure Sidebar Expanded on Load
+    document.getElementById("routes-container").style.display = "block";
 
     // 🔹 Load Chapas Routes from GeoJSON
     fetch("./data/rotas_chapas1.geojson")
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 checkbox.type = "checkbox";
                 checkbox.classList.add("route-filter");
                 checkbox.value = routeName;
-                checkbox.checked = false; // ✅ Ensure all routes are checked on load
+                checkbox.checked = true; // ✅ Ensure all routes are checked on load
                 checkbox.addEventListener("change", applyFilters);
 
                 let label = document.createElement("label");
@@ -88,7 +88,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // ✅ Save full dataset and Show all routes initially
             window.allRoutesGeoJSON = routesGeoJSON;
-            updateMap(routesGeoJSON.features); // ✅ Show routes initially
+            updateMap(routesGeoJSON.features);
+            updateStats(routesGeoJSON.features);
         })
         .catch(error => console.error("❌ Error loading GeoJSON:", error));
 
@@ -125,7 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // 🔹 Update Stops
     function updateStops(selectedRoutes) {
         stopsLayer.clearLayers();
-
         if (!allStopsGeoJSON) return;
 
         var filteredStops = allStopsGeoJSON.features.filter(stop =>
@@ -144,29 +144,28 @@ document.addEventListener("DOMContentLoaded", function () {
                     opacity: 1,
                     fillOpacity: 0.8
                 });
-            },
-            onEachFeature: function (feature, layer) {
-                let stopName = feature.properties.name ? feature.properties.name : "Paragem sem nome";
-                layer.bindTooltip(stopName, {
-                    permanent: false, // ✅ Always show label
-                    direction: "top",
-                    offset: [0, -8],
-                    className: "bus-stop-label"
-                });
-
-                layer.bindPopup(`<b>Paragem:</b> ${stopName}<br>
-                                <b>Distrito:</b> ${feature.properties.addr_distr || "N/A"}<br>
-                                <b>Rua:</b> ${feature.properties.addr_stree || "N/A"}`);
             }
         }).addTo(stopsLayer);
     }
 
+    // 🔹 Function to update statistics
+    function updateStats(selectedRoutes) {
+        let totalRoutes = window.allRoutesGeoJSON ? new Set(window.allRoutesGeoJSON.features.map(route => route.properties.name_2)).size : 0;
+        document.getElementById("total-routes").innerText = totalRoutes;
+        document.getElementById("selected-routes-count").innerText = selectedRoutes.length;
+        document.getElementById("selected-route").innerText = selectedRoutes.length > 1 ? "Várias rotas" : selectedRoutes[0] || "Nenhuma";
+    }
+
     // 🔹 Auto-Filter
     function applyFilters() {
+        routesLayer.clearLayers();
+        stopsLayer.clearLayers();
+
         var selectedRoutes = [...document.querySelectorAll(".route-filter:checked")].map(cb => cb.value);
+        console.log("🔍 Selected Routes:", selectedRoutes);
+
         if (selectedRoutes.length === 0) {
-            updateMap(window.allRoutesGeoJSON.features);
-            updateStops([]);
+            updateStats([]); // ✅ Reset stats when no routes selected
             return;
         }
 
@@ -176,12 +175,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         updateMap(filteredRoutes);
         updateStops(selectedRoutes);
+        updateStats(selectedRoutes);
     }
 
-    // 🔹 Ensure all Chapas routes are checked by default
+    // 🔹 Select All / Unselect All Chapas
     document.getElementById("check-chapas").addEventListener("change", function () {
         document.querySelectorAll("#routes-container input[type='checkbox']").forEach(cb => cb.checked = this.checked);
         applyFilters();
     });
 
+    
 });

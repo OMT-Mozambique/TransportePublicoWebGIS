@@ -118,3 +118,21 @@ h5 {
     text-align: center;
 }
 
+body {
+    font-family: Arial, sans-serif;
+}
+.layer-panel {
+    width: 250px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #f9f9f9;
+}
+.toggle-btn {
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 5px;
+}
+#chapas-routes {
+    margin-left: 20px;
+    display: block; /* Default expanded */
+}

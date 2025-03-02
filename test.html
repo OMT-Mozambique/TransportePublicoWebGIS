@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapas Layer Toggle & Select All</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .layer-panel {
+            width: 250px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .toggle-btn {
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 5px;
+        }
+        #chapas-routes {
+            margin-left: 20px;
+            display: block; /* Default expanded */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layer-panel">
+        <!-- Toggle Button & Label -->
+        <div>
+            <span id="chapas-toggle" class="toggle-btn">▼</span>
+            <input type="checkbox" id="check-chapas" checked> 🚐 <b>Chapas</b>
+        </div>
+
+        <!-- Routes List (Initially Expanded) -->
+        <div id="chapas-routes">
+            <input type="checkbox" class="route-checkbox" checked> Route 1<br>
+            <input type="checkbox" class="route-checkbox" checked> Route 2<br>
+            <input type="checkbox" class="route-checkbox" checked> Route 3<br>
+        </div>
+    </div>
+
+    <script>
+        // ✅ Toggle Button Function (Collapse/Expand Chapas Layers)
+        document.getElementById("chapas-toggle").addEventListener("click", function () {
+            var routesDiv = document.getElementById("chapas-routes");
+            if (routesDiv.style.display === "none") {
+                routesDiv.style.display = "block";
+                this.innerHTML = "▼"; // Expanded
+            } else {
+                routesDiv.style.display = "none";
+                this.innerHTML = "▶"; // Collapsed
+            }
+        });
+
+        // ✅ Select/Unselect All Function
+        document.getElementById("check-chapas").addEventListener("change", function () {
+            var checked = this.checked;
+            document.querySelectorAll(".route-checkbox").forEach(route => {
+                route.checked = checked; // ✅ Select/Unselect all
+            });
+        });
+
+        // ✅ If all individual routes are manually unchecked, uncheck "Chapas" automatically
+        document.querySelectorAll(".route-checkbox").forEach(route => {
+            route.addEventListener("change", function () {
+                var allChecked = document.querySelectorAll(".route-checkbox:checked").length > 0;
+                document.getElementById("check-chapas").checked = allChecked; // ✅ Update Chapas checkbox
+            });
+        });
+    </script>
+
+</body>
+</html>

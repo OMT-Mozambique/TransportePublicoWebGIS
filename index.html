@@ -27,25 +27,27 @@
         </div>
     </nav>
 
-    <!-- 🔹 Left Sidebar -->
+    <!-- 🔹 Sidebar -->
     <div class="sidebar">
+
         <!-- 🔹 District Filter -->
         <label for="district-filter"><b>🗺️ Selecione Área:</b></label>
         <select id="district-filter">
             <option value="">Todos os Distritos</option>
         </select>
-    
-        <!-- 🔹 Chapas Routes (Collapsible & Checkable) -->
-        <div class="route-group">
-            <span class="arrow" onclick="toggleCollapse('routes-container')">▶</span>
-            <label>
-                <input type="checkbox" id="check-chapas"> 🚐 Chapas
-            </label>
-            <div class="content" id="routes-container" style="display: none;"></div>
+
+        <!-- 🔹 Chapas Route Group with Expand/Collapse -->
+        <div>
+            <span id="chapas-toggle" class="toggle-btn" >▼</span>
+            <input type="checkbox" id="check-chapas" checked> 🚐 <b>Chapas</b>
         </div>
-    
-        <!-- 🔹 REM Routes (Collapsible & Checkable) -->
-        <div class="route-group">
+        <!-- 🔹 Routes Container (Initially Expanded) -->
+        <div id="chapas-routes" class="collapsible-content">
+            <div id="routes-container"></div>
+        </div>
+
+         <!-- 🔹 REM Routes (Collapsible & Checkable) -->
+         <div class="route-group">
             <span class="arrow" onclick="toggleCollapse('routes-rem-container')">▶</span>
             <label>
                 <input type="checkbox" id="check-rem"> 🚌 REM
@@ -62,7 +64,7 @@
             <div class="content" id="routes-cfm-container" style="display: none;"></div>
         </div>
     </div>
-    
+
 
     <!-- 🔹 Right Sidebar for Statistics -->
     <div id="stats-container">
@@ -91,6 +93,36 @@
 
     <!-- Custom JavaScript -->
     <script src="js/app.js"></script>
+
+    <script>
+        // ✅ Toggle Button Function (Collapse/Expand Chapas Layers)
+        document.getElementById("chapas-toggle").addEventListener("click", function () {
+            var routesDiv = document.getElementById("chapas-routes");
+            if (routesDiv.style.display === "none") {
+                routesDiv.style.display = "block";
+                this.innerHTML = "▼"; // Expanded
+            } else {
+                routesDiv.style.display = "none";
+                this.innerHTML = "▶"; // Collapsed
+            }
+        });
+
+        // ✅ Select/Unselect All Function
+        document.getElementById("check-chapas").addEventListener("change", function () {
+            var checked = this.checked;
+            document.querySelectorAll(".route-checkbox").forEach(route => {
+                route.checked = checked; // ✅ Select/Unselect all
+            });
+        });
+
+        // ✅ If all individual routes are manually unchecked, uncheck "Chapas" automatically
+        document.querySelectorAll(".route-checkbox").forEach(route => {
+            route.addEventListener("change", function () {
+                var allChecked = document.querySelectorAll(".route-checkbox:checked").length > 0;
+                document.getElementById("check-chapas").checked = allChecked; // ✅ Update Chapas checkbox
+            });
+        });
+    </script>
 
 </body>
 </html>
