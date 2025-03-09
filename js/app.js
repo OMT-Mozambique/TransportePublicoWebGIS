@@ -46,6 +46,22 @@ document.addEventListener("DOMContentLoaded", function () {
     // 🔹 Ensure Sidebar Expanded on Load
     document.getElementById("routes-container").style.display = "block";
 
+    
+    setTimeout(() => {
+        if (window.allRoutesGeoJSON) {
+            let allRouteNames = window.allRoutesGeoJSON.features.map(route => route.properties.name_2);
+            updateStats(allRouteNames); // ✅ Updates stats for all routes initially
+            
+            // ✅ Ensure all checkboxes are checked by default
+            document.getElementById("check-chapas").checked = true;
+            document.querySelectorAll("#routes-container input[type='checkbox']").forEach(cb => cb.checked = true);
+            
+            applyFilters(); // ✅ Apply filter to show everything
+        }
+    }, 500);
+
+    
+
     // 🔹 Load Chapas Routes from GeoJSON
     fetch("./data/rotas_chapas1.geojson")
         .then(response => response.json())
@@ -75,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 checkbox.type = "checkbox";
                 checkbox.classList.add("route-filter");
                 checkbox.value = routeName;
-                checkbox.checked = true; // ✅ Ensure all routes are checked on load
+                checkbox.checked = false; // ✅ Ensure all routes are checked on load
                 checkbox.addEventListener("change", applyFilters);
 
                 let label = document.createElement("label");
@@ -89,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // ✅ Save full dataset and Show all routes initially
             window.allRoutesGeoJSON = routesGeoJSON;
             updateMap(routesGeoJSON.features);
-            updateStats(routesGeoJSON.features);
+            updateStats([]);
         })
         .catch(error => console.error("❌ Error loading GeoJSON:", error));
 
@@ -125,16 +141,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 🔹 Update Stops
     function updateStops(selectedRoutes) {
-        stopsLayer.clearLayers();
-        if (!allStopsGeoJSON) return;
-
-        var filteredStops = allStopsGeoJSON.features.filter(stop =>
+        stopsLayer.clearLayers(); // Remove previous stops
+    
+        if (!allStopsGeoJSON) return; // Ensure stops data is loaded
+    
+        var filteredStops = allStopsGeoJSON.features.filter(stop => 
             stop.properties.name_2_2 && selectedRoutes.some(route => stop.properties.name_2_2.includes(route))
         );
-
+    
         console.log("🚏 Filtered Stops:", filteredStops.length);
-
-        L.geoJSON(filteredStops, {
+    
+        var stopLayer = L.geoJSON(filteredStops, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, {
                     radius: 5,
@@ -144,9 +161,44 @@ document.addEventListener("DOMContentLoaded", function () {
                     opacity: 1,
                     fillOpacity: 0.8
                 });
+            },
+            onEachFeature: function (feature, layer) {
+                let stopName = feature.properties.name ? feature.properties.name : "Paragem sem nome";
+                let distrito = feature.properties.addr_distr || "N/A";
+                let rua = feature.properties.addr_stree || "N/A";
+    
+                // ✅ Add a popup for each stop
+                layer.bindPopup(`<b>Paragem:</b> ${stopName}<br>
+                                 <b>Distrito:</b> ${distrito}<br>
+                                 <b>Rua:</b> ${rua}`);
+    
+                // ✅ Add a tooltip that dynamically changes with zoom
+                let tooltip = L.tooltip({
+                    permanent: map.getZoom() > 14,  // Labels are always visible if zoom > 14
+                    direction: "top",
+                    offset: [0, -8],
+                    className: "bus-stop-label"
+                }).setContent(stopName);
+    
+                layer.bindTooltip(tooltip);
             }
-        }).addTo(stopsLayer);
+        });
+    
+        stopsLayer.addLayer(stopLayer);
+    
+        // ✅ Update labels dynamically when zooming
+        map.on("zoomend", function () {
+            let currentZoom = map.getZoom();
+            stopsLayer.eachLayer(layer => {
+                let tooltip = layer.getTooltip();
+                if (tooltip) {
+                    tooltip.options.permanent = currentZoom > 14; // Show labels permanently at zoom > 14
+                    layer.unbindTooltip().bindTooltip(tooltip).openTooltip();
+                }
+            });
+        });
     }
+    
 
     // 🔹 Function to update statistics
     function updateStats(selectedRoutes) {
@@ -154,7 +206,59 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("total-routes").innerText = totalRoutes;
         document.getElementById("selected-routes-count").innerText = selectedRoutes.length;
         document.getElementById("selected-route").innerText = selectedRoutes.length > 1 ? "Várias rotas" : selectedRoutes[0] || "Nenhuma";
+        // ✅ Count unique routes
+
+        let inboundDistance = 0, outboundDistance = 0;
+        let inboundStops = 0, outboundStops = 0;
+        let inboundOperators = new Set(), outboundOperators = new Set();
+
+        selectedRoutes.forEach(routeName => {
+            let route = window.allRoutesGeoJSON.features.find(r => r.properties.name_2 === routeName);
+            if (!route) return;
+
+            let direction = route.properties.direction; // 1 = Inbound, 2 = Outbound
+            let distance = route.properties.dist_km || 0;
+
+            let numStops = allStopsGeoJSON ? allStopsGeoJSON.features.filter(stop =>
+                stop.properties.name_2_2 && stop.properties.name_2_2.includes(routeName)
+            ).length : 0;
+
+            // ✅ Check for both directions separately
+            if (String(direction) === "1") {
+                inboundDistance += distance;
+                inboundStops += numStops;
+                if (route.properties.network) inboundOperators.add(route.properties.network);
+            }
+            if (String(direction) === "2") {
+                outboundDistance += distance;
+                outboundStops += numStops;
+                if (route.properties.network) outboundOperators.add(route.properties.network);
+            }
+        });
+
+        let inboundTime = (inboundDistance / 20 * 60).toFixed(0);
+        let outboundTime = (outboundDistance / 20 * 60).toFixed(0);
+
+        
+    
+
+        // ✅ Update the name of the selected route(s)
+        document.getElementById("inbound-distance").innerText = inboundDistance.toFixed(2);
+        document.getElementById("outbound-distance").innerText = outboundDistance.toFixed(2);
+
+        document.getElementById("inbound-stops").innerText = inboundStops;
+        document.getElementById("outbound-stops").innerText = outboundStops;
+
+        document.getElementById("inbound-travel-time").innerText = inboundTime;
+        document.getElementById("outbound-travel-time").innerText = outboundTime;
+
+        document.getElementById("route-operator").innerText = inboundOperators.size > 1 || outboundOperators.size > 1
+            ? "Vários operadores"
+            : [...inboundOperators, ...outboundOperators].join(", ") || "N/A";
+
     }
+
+    
 
     // 🔹 Auto-Filter
     function applyFilters() {
@@ -176,6 +280,30 @@ document.addEventListener("DOMContentLoaded", function () {
         updateMap(filteredRoutes);
         updateStops(selectedRoutes);
         updateStats(selectedRoutes);
+
+        // ✅ Calculate the bounding box (extent) of the selected routes
+        var bounds = L.latLngBounds();
+        filteredRoutes.forEach(feature => {
+            feature.geometry.coordinates.forEach(line => {
+                line.forEach(coord => {
+                    bounds.extend([coord[1], coord[0]]); // Lat/Lon order
+                });
+            });
+        });
+
+      
+
+        if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        
+            // ✅ Show all labels if zooming to a route
+            setTimeout(() => {
+                if (map.getZoom() > 44) {
+                    stopsLayer.eachLayer(layer => layer.openTooltip());
+                }
+            }, 1000);
+        }
+        
     }
 
     // 🔹 Select All / Unselect All Chapas
