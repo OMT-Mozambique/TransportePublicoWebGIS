@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OMT: Mapa dos Transportes Publicos</title>
+    <title>OMT: Mapa dos Transportes Públicos</title>
 
     <!-- Bootstrap for UI -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -16,60 +16,94 @@
 </head>
 <body>
 
-    <!-- 🔹 Tesla-style Navigation Bar -->
+    <!-- 🔹 Navigation Bar -->
     <nav class="navbar">
         <div class="container-fluid">
+
             <div class="navbar-header">
-                
-                <img src="img/logo.png" alt="Logo" class="logo"  >
-                <a class="navbar-brand">       Mapa dos Transportes de Moçambique</a>
+                <img src="img/logo.png" alt="Logo" class="logo">
+                <a class="navbar-brand">Mapa dos Transportes de Moçambique</a>
             </div>
+
             <div class="nav-links">
-                <a href="#">Sobre</a>
-                <a href="#">Contacte-nos</a>
+                <a href="https://omt.org.mz" style="color: rgb(9, 9, 145); font-weight: bold; text-decoration: none;" target="_blank">#OMT</a>
+                <a href="https://www.amt.gov.mz/" style="color: rgb(9, 9, 145); font-weight: bold; text-decoration: none;" target="_blank">#AMT</a>
+                <a href="https://www.mtc.gov.mz/" style="color: rgb(9, 9, 145); font-weight: bold; text-decoration: none;" target="_blank">#MTL</a>
             </div>
+
+            <div class="nav-right">
+                <a href="about.html" target="_blank">
+                    <i class="fas fa-info-circle"></i> Sobre
+                </a>
+            </div>
+
         </div>
     </nav>
-    
 
-    <!-- 🔹 Sidebar -->
+    <!-- 🔹 Sidebar for Layer Control -->
     <div class="sidebar">
+        <h3>🗺️ Camadas</h3>
 
-        <!-- 🔹 District Filter -->
-        <label for="district-filter"><b>🗺️ Selecione Área:</b></label>
-        <select id="district-filter">
-            <option value="">Todos os Distritos</option>
-        </select>
-
-        <!-- 🔹 Chapas Route Group with Expand/Collapse -->
-        <div>
-            <span id="chapas-toggle" class="toggle-btn" >▼</span>
-            <input type="checkbox" id="check-chapas" checked> 🚐 <b>Chapas</b>
-        </div>
-        <!-- 🔹 Routes Container (Initially Expanded) -->
-        <div id="chapas-routes" class="collapsible-content">
-            <div id="routes-container"></div>
+        <!-- 🔹 Divisão Administrativa -->
+        <div class="layer-group">
+            <button class="layer-toggle">Divisão Administrativa ▼</button>
+            <div class="layer-content">
+                <select id="district-filter">
+                    <option value="">Todos os Distritos</option>
+                </select>
+            </div>
         </div>
 
-         <!-- 🔹 REM Routes (Collapsible & Checkable) -->
-         <div class="route-group">
-            <span class="arrow" onclick="toggleCollapse('routes-rem-container')">▶</span>
-            <label>
-                <input type="checkbox" id="check-rem"> 🚌 REM
-            </label>
-            <div class="content" id="routes-rem-container" style="display: none;"></div>
+        <!-- 🔹 Chapas Route Group (Collapsible & Checkable) -->
+        <div class="layer-group">
+            <button class="layer-toggle">Rotas ▼</button>
+            <div class="layer-content">
+                <input type="checkbox" id="check-chapas" checked> <label for="check-chapas">Selecionar todas</label>
+                <input type="text" id="search-rotas" placeholder="🔍 Pesquisar Rota...">
+                <div id="routes-container"></div>
+            </div>
         </div>
-    
-        <!-- 🔹 CFM Routes (Collapsible & Checkable) -->
-        <div class="route-group">
-            <span class="arrow" onclick="toggleCollapse('routes-cfm-container')">▶</span>
-            <label>
-                <input type="checkbox" id="check-cfm"> 🚆 CFM
-            </label>
-            <div class="content" id="routes-cfm-container" style="display: none;"></div>
+
+        <!-- 🔹 Paragens (Bus Stops) -->
+        <div class="layer-group">
+            <button class="layer-toggle">Paragens ▼</button>
+            <div class="layer-content">
+                <input type="text" id="search-paragens" placeholder="🔍 Pesquisar Paragem...">
+                <div id="stops-container"></div>
+            </div>
+        </div>
+
+        <!-- 🔹 Informações Adicionais -->
+        <div class="layer-group">
+            <button class="layer-toggle">Filtros ▼</button>
+            <div class="layer-content">
+                <label>🎟️ Tarifa:</label>
+                <select id="tarifa-filter">
+                    <option value="">Todas</option>
+                    <option value="less">Menor que</option>
+                    <option value="equal">Igual a</option>
+                    <option value="greater">Maior que</option>
+                </select>
+                <input type="number" id="tarifa-value" placeholder="Ex: 50 MZN">
+<br>
+<br>
+                <label>📏 Distância:</label>
+                <input type="range" id="distance-filter" min="0" max="50" step="1">
+                <span id="distance-value">0 km</span>
+                <br>
+                <br>
+                <label>⏰ Horário:</label>
+                <input type="time" id="start-time">
+                <input type="time" id="end-time">
+                <br>
+                <br>
+                <label>🚍 Operador:</label>
+                <select id="operator-filter">
+                    <option value="">Todos</option>
+                </select>
+            </div>
         </div>
     </div>
-
 
     <!-- 🔹 Right Sidebar for Statistics -->
     <div id="stats-container">
@@ -93,38 +127,66 @@
     <div id="map"></div>
 
     <!-- Leaflet.js & Plugins -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.2/proj4.js"></script>
+    
+    
+    <!-- ✅ Load Leaflet Core -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- ✅ Leaflet Measure Plugin -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css" />
+    //<script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.pt_PT.js"></script>
 
     <!-- Custom JavaScript -->
     <script src="js/app.js"></script>
-
+    
     <script>
-        // ✅ Toggle Button Function (Collapse/Expand Chapas Layers)
-        document.getElementById("chapas-toggle").addEventListener("click", function () {
-            var routesDiv = document.getElementById("chapas-routes");
-            if (routesDiv.style.display === "none") {
-                routesDiv.style.display = "block";
-                this.innerHTML = "▼"; // Expanded
-            } else {
-                routesDiv.style.display = "none";
-                this.innerHTML = "▶"; // Collapsed
-            }
-        });
+        document.addEventListener("DOMContentLoaded", function () {
 
-        // ✅ Select/Unselect All Function
-        document.getElementById("check-chapas").addEventListener("change", function () {
-            var checked = this.checked;
-            document.querySelectorAll(".route-checkbox").forEach(route => {
-                route.checked = checked; // ✅ Select/Unselect all
+            
+            // ✅ Toggle Layer Visibility
+            document.querySelectorAll(".layer-toggle").forEach(button => {
+                button.addEventListener("click", function () {
+                    let content = this.nextElementSibling;
+                    let isVisible = content.style.display === "block";
+                    document.querySelectorAll(".layer-content").forEach(c => c.style.display = "none");
+                    content.style.display = isVisible ? "none" : "block";
+                });
             });
-        });
 
-        // ✅ If all individual routes are manually unchecked, uncheck "Chapas" automatically
-        document.querySelectorAll(".route-checkbox").forEach(route => {
-            route.addEventListener("change", function () {
-                var allChecked = document.querySelectorAll(".route-checkbox:checked").length > 0;
-                document.getElementById("check-chapas").checked = allChecked; // ✅ Update Chapas checkbox
+            // ✅ Toggle Chapas Routes Expand/Collapse
+            document.getElementById("check-chapas").addEventListener("change", function () {
+                let checked = this.checked;
+                document.querySelectorAll(".route-checkbox").forEach(route => {
+                    route.checked = checked;
+                });
+            });
+
+            // ✅ Update "Chapas" checkbox if all individual routes are unchecked
+            document.querySelectorAll(".route-checkbox").forEach(route => {
+                route.addEventListener("change", function () {
+                    let allChecked = document.querySelectorAll(".route-checkbox:checked").length > 0;
+                    document.getElementById("check-chapas").checked = allChecked;
+                });
+            });
+
+            // ✅ Search Function for Routes
+            document.getElementById("search-rotas").addEventListener("input", function () {
+                let searchTerm = this.value.toLowerCase();
+                document.querySelectorAll("#routes-container label").forEach(label => {
+                    label.style.display = label.textContent.toLowerCase().includes(searchTerm) ? "block" : "none";
+                });
+            });
+
+            // ✅ Search Function for Bus Stops
+            document.getElementById("search-paragens").addEventListener("input", function () {
+                let searchTerm = this.value.toLowerCase();
+                document.querySelectorAll("#stops-container label").forEach(label => {
+                    label.style.display = label.textContent.toLowerCase().includes(searchTerm) ? "block" : "none";
+                });
             });
         });
     </script>

@@ -3,7 +3,17 @@ proj4.defs("EPSG:32736", "+proj=utm +zone=36 +south +datum=WGS84 +units=m +no_de
 
 // 🔹 Initialize Leaflet Map
 document.addEventListener("DOMContentLoaded", function () {
-    var map = L.map("map").setView([-25.9692, 32.5732], 12); // Centered in Mozambique
+
+    //✅ Ensure Leaflet is Loaded
+    if (typeof L === "undefined") {
+        console.error("❌ Leaflet is not loaded!");
+        return;
+    }
+
+
+    var map = L.map("map").setView([-25.9292, 32.5732], 12); // Centered in Mozambique
+ 
+    map.options.minZoom = 6; // Prevent excessive zooming out
 
     // 🔹 Define Tile Layers
     var grayscaleBasemap = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -20,17 +30,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 🔹 Add Default Basemap (Grayscale)
     grayscaleBasemap.addTo(map);
-
-    // 🔹 Basemap Control
     var baseMaps = {
         "🟠 Grayscale": grayscaleBasemap,
         "🌍 Satellite": satelliteBasemap
     };
-    L.control.layers(baseMaps).addTo(map);
+
+    L.control.layers(baseMaps, {}, { position: "topleft" }).addTo(map);
     L.control.scale({ position: "bottomright" }).addTo(map);
 
+    // ✅ Ensure Leaflet is Loaded
+    if (typeof L === "undefined") {
+        console.error("❌ Leaflet is not loaded!");
+    } 
+
+    // ✅ Initialize the Measure Control
+    var measureControl = new L.Control.Measure({
+        primaryLengthUnit: "kilometers", // Unidade principal: KM
+        secondaryLengthUnit: "meters",   // Unidade secundária: M
+        primaryAreaUnit: "sqmeters",     // Área principal: m²
+        secondaryAreaUnit: "hectares",   // Área secundária: Hectares
+        activeColor: "#FF0000",          // Cor da linha ativa
+        completedColor: "#00FF00",       // Cor da linha finalizada
+        position: "topleft",   
+        localization: "pt",         // Localização no mapa
+    });
+
+    // ✅ Add the Measure Control to the Map
+    map.addControl(measureControl);
+
+
     // 🔹 Add North Arrow
-    var northControl = L.control({ position: "bottomright" });
+    var northControl = L.control({ position: "bottomleft" });
     northControl.onAdd = function () {
         var div = L.DomUtil.create("div", "north-arrow");
         div.innerHTML = "<img src='https://www.svgrepo.com/show/399195/north-arrow-n.svg' style='width:50px; opacity: 0.8;' title='North'>";
@@ -43,25 +73,15 @@ document.addEventListener("DOMContentLoaded", function () {
     var stopsLayer = L.layerGroup().addTo(map);
     var allStopsGeoJSON;
 
+
+
+
+
+
+    
     // 🔹 Ensure Sidebar Expanded on Load
     document.getElementById("routes-container").style.display = "block";
-
     
-    setTimeout(() => {
-        if (window.allRoutesGeoJSON) {
-            let allRouteNames = window.allRoutesGeoJSON.features.map(route => route.properties.name_2);
-            updateStats(allRouteNames); // ✅ Updates stats for all routes initially
-            
-            // ✅ Ensure all checkboxes are checked by default
-            document.getElementById("check-chapas").checked = true;
-            document.querySelectorAll("#routes-container input[type='checkbox']").forEach(cb => cb.checked = true);
-            
-            applyFilters(); // ✅ Apply filter to show everything
-        }
-    }, 500);
-
-    
-
     // 🔹 Load Chapas Routes from GeoJSON
     fetch("./data/rotas_chapas1.geojson")
         .then(response => response.json())
@@ -78,8 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             // Extract unique routes
-            let uniqueRoutes = new Set();
-            routesGeoJSON.features.forEach(feature => uniqueRoutes.add(feature.properties.name_2));
+            let uniqueRoutes = new Set(routesGeoJSON.features.map(feature => feature.properties.name_2));
             let sortedRoutes = [...uniqueRoutes].sort();
 
             var routesContainer = document.getElementById("routes-container");
@@ -91,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 checkbox.type = "checkbox";
                 checkbox.classList.add("route-filter");
                 checkbox.value = routeName;
-                checkbox.checked = false; // ✅ Ensure all routes are checked on load
+                checkbox.checked = true; // ✅ Default: All routes checked
                 checkbox.addEventListener("change", applyFilters);
 
                 let label = document.createElement("label");
@@ -102,10 +121,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 routesContainer.appendChild(document.createElement("br"));
             });
 
-            // ✅ Save full dataset and Show all routes initially
+            // ✅ Save dataset & Show all routes initially
             window.allRoutesGeoJSON = routesGeoJSON;
             updateMap(routesGeoJSON.features);
-            updateStats([]);
+            updateStats(sortedRoutes);
         })
         .catch(error => console.error("❌ Error loading GeoJSON:", error));
 
@@ -141,17 +160,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 🔹 Update Stops
     function updateStops(selectedRoutes) {
-        stopsLayer.clearLayers(); // Remove previous stops
-    
-        if (!allStopsGeoJSON) return; // Ensure stops data is loaded
-    
-        var filteredStops = allStopsGeoJSON.features.filter(stop => 
+        stopsLayer.clearLayers();
+        if (!allStopsGeoJSON) return;
+
+        var filteredStops = allStopsGeoJSON.features.filter(stop =>
             stop.properties.name_2_2 && selectedRoutes.some(route => stop.properties.name_2_2.includes(route))
         );
-    
+
         console.log("🚏 Filtered Stops:", filteredStops.length);
-    
-        var stopLayer = L.geoJSON(filteredStops, {
+
+        L.geoJSON(filteredStops, {
             pointToLayer: function (feature, latlng) {
                 return L.circleMarker(latlng, {
                     radius: 5,
@@ -163,42 +181,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             },
             onEachFeature: function (feature, layer) {
-                let stopName = feature.properties.name ? feature.properties.name : "Paragem sem nome";
-                let distrito = feature.properties.addr_distr || "N/A";
-                let rua = feature.properties.addr_stree || "N/A";
-    
-                // ✅ Add a popup for each stop
-                layer.bindPopup(`<b>Paragem:</b> ${stopName}<br>
-                                 <b>Distrito:</b> ${distrito}<br>
-                                 <b>Rua:</b> ${rua}`);
-    
-                // ✅ Add a tooltip that dynamically changes with zoom
+                let stopName = feature.properties.name || "Paragem sem nome";
+                layer.bindPopup(`<b>Paragem:</b> ${stopName}`);
+
                 let tooltip = L.tooltip({
-                    permanent: map.getZoom() > 14,  // Labels are always visible if zoom > 14
+                    permanent: map.getZoom() > 14,
                     direction: "top",
                     offset: [0, -8],
                     className: "bus-stop-label"
                 }).setContent(stopName);
-    
                 layer.bindTooltip(tooltip);
             }
-        });
-    
-        stopsLayer.addLayer(stopLayer);
-    
-        // ✅ Update labels dynamically when zooming
+        }).addTo(stopsLayer);
+
+        // ✅ Toggle Labels Dynamically
         map.on("zoomend", function () {
             let currentZoom = map.getZoom();
             stopsLayer.eachLayer(layer => {
                 let tooltip = layer.getTooltip();
                 if (tooltip) {
-                    tooltip.options.permanent = currentZoom > 14; // Show labels permanently at zoom > 14
+                    tooltip.options.permanent = currentZoom > 14;
                     layer.unbindTooltip().bindTooltip(tooltip).openTooltip();
                 }
             });
         });
     }
-    
 
     // 🔹 Function to update statistics
     function updateStats(selectedRoutes) {
@@ -206,70 +213,13 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("total-routes").innerText = totalRoutes;
         document.getElementById("selected-routes-count").innerText = selectedRoutes.length;
         document.getElementById("selected-route").innerText = selectedRoutes.length > 1 ? "Várias rotas" : selectedRoutes[0] || "Nenhuma";
-        // ✅ Count unique routes
-
-        let inboundDistance = 0, outboundDistance = 0;
-        let inboundStops = 0, outboundStops = 0;
-        let inboundOperators = new Set(), outboundOperators = new Set();
-
-        selectedRoutes.forEach(routeName => {
-            let route = window.allRoutesGeoJSON.features.find(r => r.properties.name_2 === routeName);
-            if (!route) return;
-
-            let direction = route.properties.direction; // 1 = Inbound, 2 = Outbound
-            let distance = route.properties.dist_km || 0;
-
-            let numStops = allStopsGeoJSON ? allStopsGeoJSON.features.filter(stop =>
-                stop.properties.name_2_2 && stop.properties.name_2_2.includes(routeName)
-            ).length : 0;
-
-            // ✅ Check for both directions separately
-            if (String(direction) === "1") {
-                inboundDistance += distance;
-                inboundStops += numStops;
-                if (route.properties.network) inboundOperators.add(route.properties.network);
-            }
-            if (String(direction) === "2") {
-                outboundDistance += distance;
-                outboundStops += numStops;
-                if (route.properties.network) outboundOperators.add(route.properties.network);
-            }
-        });
-
-        let inboundTime = (inboundDistance / 20 * 60).toFixed(0);
-        let outboundTime = (outboundDistance / 20 * 60).toFixed(0);
-
-        
-    
-
-        // ✅ Update the name of the selected route(s)
-        document.getElementById("inbound-distance").innerText = inboundDistance.toFixed(2);
-        document.getElementById("outbound-distance").innerText = outboundDistance.toFixed(2);
-
-        document.getElementById("inbound-stops").innerText = inboundStops;
-        document.getElementById("outbound-stops").innerText = outboundStops;
-
-        document.getElementById("inbound-travel-time").innerText = inboundTime;
-        document.getElementById("outbound-travel-time").innerText = outboundTime;
-
-        document.getElementById("route-operator").innerText = inboundOperators.size > 1 || outboundOperators.size > 1
-            ? "Vários operadores"
-            : [...inboundOperators, ...outboundOperators].join(", ") || "N/A";
-
     }
-
-    
 
     // 🔹 Auto-Filter
     function applyFilters() {
-        routesLayer.clearLayers();
-        stopsLayer.clearLayers();
-
         var selectedRoutes = [...document.querySelectorAll(".route-filter:checked")].map(cb => cb.value);
-        console.log("🔍 Selected Routes:", selectedRoutes);
-
         if (selectedRoutes.length === 0) {
-            updateStats([]); // ✅ Reset stats when no routes selected
+            updateStats([]); // ✅ Reset stats
             return;
         }
 
@@ -280,30 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
         updateMap(filteredRoutes);
         updateStops(selectedRoutes);
         updateStats(selectedRoutes);
-
-        // ✅ Calculate the bounding box (extent) of the selected routes
-        var bounds = L.latLngBounds();
-        filteredRoutes.forEach(feature => {
-            feature.geometry.coordinates.forEach(line => {
-                line.forEach(coord => {
-                    bounds.extend([coord[1], coord[0]]); // Lat/Lon order
-                });
-            });
-        });
-
-      
-
-        if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [50, 50] });
-        
-            // ✅ Show all labels if zooming to a route
-            setTimeout(() => {
-                if (map.getZoom() > 44) {
-                    stopsLayer.eachLayer(layer => layer.openTooltip());
-                }
-            }, 1000);
-        }
-        
     }
 
     // 🔹 Select All / Unselect All Chapas
@@ -312,5 +238,5 @@ document.addEventListener("DOMContentLoaded", function () {
         applyFilters();
     });
 
-    
-});
+}); 
+

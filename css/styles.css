@@ -9,29 +9,24 @@ html, body {
 /* 🔹 Navigation Bar */
 .navbar {
     width: 100%;
-    background-color: #f8f9fa; /* Light background */
+    background-color: #ffffff; /* Light background */
     padding: 10px 20px;
     display: flex;
     align-items: center;
+    z-index: 1000;
     justify-content: space-between;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Soft shadow */
 }
 
 /* Navbar Brand (Title) */
 .navbar-brand {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: bold;
-    color: #333;
+    color: #1f1e1e;
     text-decoration: none;
-    align-items: center;
-    padding: 10px 20px;
-    white-space: nowrap; /* Prevents breaking */
-}
-
-.container-fluid {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    align-items: left;
+    padding: 10px 10px;
+    white-space: nowrap;
 }
 
 /* Navbar Header */
@@ -41,16 +36,33 @@ html, body {
     gap: 10px;
 }
 
+.nav-right {
+    margin-left: auto; /* Move o "Sobre" para a direita */
+}
+
+.nav-right a {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: color 0.3s ease-in-out;
+}
+
 /* Logo */
 .logo {
-    width: 50px; /* Adjust as needed */
+    width: 45px;
     height: auto;
 }
 
 /* Navigation Links */
 .nav-links {
     display: flex;
-    gap: 20px;
+    gap: 25px;
+    color: #007bff;
+    justify-content: center; /* Centraliza os links */
+    flex-grow: 1; /* Faz os links ocuparem espaço suficiente para ficarem centralizados */
 }
 
 .nav-links a {
@@ -61,78 +73,101 @@ html, body {
 }
 
 .nav-links a:hover {
-    color: #007bff; /* Bootstrap blue */
+    color: #007bff;
 }
 
-/* 🔹 Sidebar (Under Navbar) */
+/* 🔹 Sidebar */
 .sidebar {
     position: fixed;
-    font-size: 15px;
-    top: 60px;
+    font-size: 13px;
+    top: 70px;
     left: 0;
-    width: 450px;
+    width: 390px;
     height: calc(100% - 60px);
-    background:  #f7f8f8;
-    padding: 20px;
+    background: #ffffffd7;
+    padding: 10px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index:800;
+    border-right: 1px solid #ffffffd7;
 }
 
-/* 🔹 Fullscreen Map (Adjusted for Sidebar & Navbar) */
-#map {
-    position: fixed;
-    top: 60px;
-    left: 320px;
-    right: 0;
-    bottom: 0;
-}
-
-/* 🔹 Sidebar Filters */
+/* Sidebar Headings */
 .sidebar h3 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
 }
 
-.form-group {
+/* 🔹 Layer Panel Styling */
+.layer-group {
     margin-bottom: 15px;
 }
 
-.checkbox-group input {
-    margin-right: 5px;
+.layer-toggle {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    background-color: #f0f0f0;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
 }
 
-/* 🔹 Typography */
-h5 {
-    margin-top: 15px;
-    font-weight: bold;
+.layer-toggle:hover {
+    background-color: #e0e0e0;
+}
+
+.layer-content {
+    display: none;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border-left: 3px solid #007bff;
+}
+
+/* 🔹 Search Fields */
+input[type="text"], select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* 🔹 Fullscreen Map */
+#map {
+    position: fixed;
+    top: 60px;
+    left: 380px;
+    right: 0;
+    bottom: 0;
 }
 
 /* 🔹 Right Sidebar (Stats Container) */
 #stats-container {
     position: absolute;
-    top: 150px;
+    top: 120px;
     right: 10px;
     width: 280px;
-    background: white;
+    background: #ffffffd7;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 10px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.6;
     z-index: 1000;
     text-align: left;
-}
-
-#stats-container h2 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    text-align: center;
 }
 
 #stats-container p {
     margin: 5px 0;
     font-size: 14px;
-    text-align: left;
 }
 
 /* 🔹 Map Labels */
@@ -143,31 +178,62 @@ h5 {
     z-index: 1000;
 }
 
+/* 🔹 Bus Stop Labels */
 .bus-stop-label {
-    font-size: 4px;
+    font-size: 12px;
     font-weight: bold;
     color: black;
     padding: 2px 5px;
     text-align: center;
 }
 
-/* 🔹 Layer Panel */
-.layer-panel {
-    width: 250px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background: #f9f9f9;
-}
-
-/* 🔹 Toggle Button */
+/* 🔹 Collapsible Sections */
 .toggle-btn {
     cursor: pointer;
     font-size: 16px;
     margin-right: 5px;
+    font-weight: bold;
 }
 
 /* 🔹 Chapas Routes */
 #chapas-routes {
-    margin-left: 20px;
-    display: block; /* Default expanded */
+    margin-left: 10px;
+    display: block;
+    padding: 5px;
+    border-radius: 5px;
 }
+
+/* 🔹 Checkboxes */
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+
+/* 🔹 Custom Toolbar Styling */
+.custom-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.custom-toolbar button {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-toolbar button:hover {
+    background: #f1f1f1;
+}
+
