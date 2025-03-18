@@ -47,18 +47,18 @@
         <!-- 🔹 Divisão Administrativa -->
         <div class="layer-group">
             <button class="layer-toggle">Divisão Administrativa ▼</button>
-            <div class="layer-content">
-                <select id="district-filter">
-                    <option value="">Todos os Distritos</option>
-                </select>
+            <div id="district-container" class="layer-content" style="max-height: 200px; overflow-y: auto;">
+                <!-- Checkboxes will be generated dynamically -->
             </div>
         </div>
+        
+        
+        
 
         <!-- 🔹 Chapas Route Group (Collapsible & Checkable) -->
         <div class="layer-group">
             <button class="layer-toggle">Rotas ▼</button>
             <div class="layer-content">
-                <input type="checkbox" id="check-chapas" checked> <label for="check-chapas">Selecionar todas</label>
                 <input type="text" id="search-rotas" placeholder="🔍 Pesquisar Rota...">
                 <div id="routes-container"></div>
             </div>
@@ -77,6 +77,8 @@
         <div class="layer-group">
             <button class="layer-toggle">Filtros ▼</button>
             <div class="layer-content">
+
+                <!-- 🎟️ Tarifa -->
                 <label>🎟️ Tarifa:</label>
                 <select id="tarifa-filter">
                     <option value="">Todas</option>
@@ -85,29 +87,40 @@
                     <option value="greater">Maior que</option>
                 </select>
                 <input type="number" id="tarifa-value" placeholder="Ex: 50 MZN">
-<br>
-<br>
+
+                <br><br>
+
+                <!-- 📏 Distância -->
                 <label>📏 Distância:</label>
-                <input type="range" id="distance-filter" min="0" max="50" step="1">
-                <span id="distance-value">0 km</span>
-                <br>
-                <br>
-                <label>⏰ Horário:</label>
-                <input type="time" id="start-time">
-                <input type="time" id="end-time">
-                <br>
-                <br>
-                <label>🚍 Operador:</label>
-                <select id="operator-filter">
-                    <option value="">Todos</option>
+                <select id="distance-filter">
+                    <option value="">Todas</option>
+                    <option value="less">Menor que</option>
+                    <option value="equal">Igual a</option>
+                    <option value="greater">Maior que</option>
                 </select>
+                <input type="number" id="distance-value" placeholder="Ex: 10 km">
+
+                <br><br>
+
+                <!-- ⏰ Horário -->
+                <label>⏰ Horário:</label>
+                <div id="horario-container" style="max-height: 100px; overflow-y: auto;"></div>
+
+                <br>
+
+                <!-- 🚍 Operador -->
+                <label>🚍 Operador:</label>
+                <div id="operador-container" style="max-height: 100px; overflow-y: auto;"></div>
+
             </div>
         </div>
+
+
     </div>
 
     <!-- 🔹 Right Sidebar for Statistics -->
     <div id="stats-container">
-        <p><strong>Numero total de rotas:</strong> <span id="total-routes">0</span></p>
+        <p><strong>Numero total de rotas:</strong> <span id="unique-routes-count">0</span></p>
         <p><strong>Numero de rotas selecionadas:</strong> <span id="selected-routes-count">0</span></p>
         <p><strong>Nome da rota selecionada:</strong> <span id="selected-route">None</span></p>
 
@@ -127,21 +140,27 @@
     <div id="map"></div>
 
     <!-- Leaflet.js & Plugins -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Proj4.js (Ensure this comes BEFORE app.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.2/proj4.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    
     
     
     <!-- ✅ Load Leaflet Core -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
 
     <!-- ✅ Leaflet Measure Plugin -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css" />
-    //<script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.pt_PT.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.pt_PT.js"></script>
 
     <!-- Custom JavaScript -->
     <script src="js/app.js"></script>
+    
+    
     
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -158,7 +177,7 @@
             });
 
             // ✅ Toggle Chapas Routes Expand/Collapse
-            document.getElementById("check-chapas").addEventListener("change", function () {
+            document.getElementById("routes-container").addEventListener("change", function () {
                 let checked = this.checked;
                 document.querySelectorAll(".route-checkbox").forEach(route => {
                     route.checked = checked;
